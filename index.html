@@ -105,6 +105,19 @@
             transform: scale(1.1);
         }
 
+        .daily-challenge-btn {
+            border-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.6);
+            margin-top: 20px;
+        }
+
+        .daily-challenge-btn:hover {
+            background: rgba(255, 170, 0, 0.3);
+            box-shadow: 0 0 40px rgba(255, 170, 0, 0.9);
+            transform: scale(1.1);
+        }
+
         .difficulty-description {
             margin-top: 30px;
             color: #00d4ff;
@@ -152,6 +165,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .difficulty-badge {
@@ -160,6 +174,32 @@
             border-radius: 20px;
             font-size: 14px;
             border: 2px solid #00ffff;
+        }
+
+        .daily-badge {
+            background: rgba(255, 170, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 2px solid #ffaa00;
+            color: #ffaa00;
+            text-shadow: 0 0 10px #ffaa00;
+        }
+
+        .power-up-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #ffaa00;
+            font-size: 24px;
+            text-shadow: 0 0 10px #ffaa00;
+            z-index: 100;
+        }
+
+        .power-up-timer {
+            color: #ffff00;
+            font-size: 14px;
+            font-weight: bold;
         }
 
         .game-stats {
@@ -234,6 +274,15 @@
             border: 2px solid rgba(255, 255, 255, 0.5);
         }
 
+        .balloon-golden {
+            animation: goldenGlow 0.5s ease-in-out infinite;
+        }
+
+        @keyframes goldenGlow {
+            0%, 100% { box-shadow: 0 0 20px #ffaa00, inset 0 0 10px rgba(255, 255, 255, 0.3); }
+            50% { box-shadow: 0 0 40px #ffaa00, inset 0 0 15px rgba(255, 255, 255, 0.5); }
+        }
+
         /* Neon color variations */
         .balloon-pink {
             color: #ff006e;
@@ -263,6 +312,11 @@
         .balloon-yellow {
             color: #ffff00;
             text-shadow: 0 0 10px #ffff00;
+        }
+
+        .balloon-golden-color {
+            color: #ffaa00;
+            text-shadow: 0 0 10px #ffaa00;
         }
 
         .confetti {
@@ -391,19 +445,30 @@
             <button class="difficulty-btn hard" onclick="startGame('hard')">
                 🔴 HARD
             </button>
+            <button class="difficulty-btn daily-challenge-btn" onclick="startGame('daily')">
+                ⭐ DAILY CHALLENGE ⭐
+            </button>
         </div>
         <div class="difficulty-description">
             <p><strong>EASY:</strong> Larger balloons, slower spawning, 90 seconds</p>
             <p><strong>MEDIUM:</strong> Normal balloons, moderate spawning, 60 seconds</p>
             <p><strong>HARD:</strong> Tiny balloons, rapid spawning, 45 seconds</p>
+            <p><strong>DAILY CHALLENGE:</strong> Same for everyone today! Compete globally!</p>
         </div>
     </div>
 
     <!-- Game Container -->
     <div class="game-container" id="gameContainer" style="display: none;">
+        <div class="power-up-indicator" id="powerUpIndicator" style="display: none;">
+            ⚡ DOUBLE POINTS! <span class="power-up-timer" id="powerUpTimer">10s</span>
+        </div>
+
         <div class="game-header">
             🎯 NEON AIRSOFT POP 🎯
-            <div class="difficulty-badge" id="difficultyBadge">MEDIUM</div>
+            <div id="headerBadges" style="display: flex; gap: 10px; align-items: center;">
+                <div class="difficulty-badge" id="difficultyBadge">MEDIUM</div>
+                <div class="daily-badge" id="dailyBadge" style="display: none;">📅 TODAY</div>
+            </div>
         </div>
         
         <div class="game-stats">
@@ -432,7 +497,7 @@
         <div class="game-area" id="gameArea"></div>
 
         <div class="game-footer">
-            <div>Click or tap the balloons to pop them! Relax and enjoy the satisfying pops.</div>
+            <div>Click or tap the balloons to pop them! Watch for Golden Balloons! ⭐</div>
             <div class="footer-buttons">
                 <button class="share-button" onclick="shareScore()">📤 SHARE SCORE</button>
                 <button class="reset-button" onclick="resetGame()">RESET GAME</button>
@@ -451,7 +516,8 @@
                 initialBalloons: 3,
                 timeLimit: 90,
                 scoreMultiplier: 1,
-                balloonLifetime: 7000
+                balloonLifetime: 7000,
+                goldenBalloonChance: 0.05
             },
             medium: {
                 minSize: 40,
@@ -460,7 +526,8 @@
                 initialBalloons: 5,
                 timeLimit: 60,
                 scoreMultiplier: 1.5,
-                balloonLifetime: 5000
+                balloonLifetime: 5000,
+                goldenBalloonChance: 0.08
             },
             hard: {
                 minSize: 25,
@@ -469,7 +536,18 @@
                 initialBalloons: 7,
                 timeLimit: 45,
                 scoreMultiplier: 2,
-                balloonLifetime: 3000
+                balloonLifetime: 3000,
+                goldenBalloonChance: 0.1
+            },
+            daily: {
+                minSize: 35,
+                maxSize: 75,
+                spawnRate: 400,
+                initialBalloons: 6,
+                timeLimit: 75,
+                scoreMultiplier: 1.8,
+                balloonLifetime: 4000,
+                goldenBalloonChance: 0.12
             }
         };
 
@@ -484,6 +562,10 @@
         let spawnInterval = null;
         let timerInterval = null;
         let highScores = {};
+        let powerUpActive = false;
+        let powerUpTimeLeft = 0;
+        let powerUpInterval = null;
+        let scoreMultiplier = 1;
 
         // Colors for balloons
         const colors = ['balloon-pink', 'balloon-cyan', 'balloon-lime', 'balloon-purple', 'balloon-orange', 'balloon-yellow'];
@@ -496,7 +578,7 @@
             if (saved) {
                 highScores = JSON.parse(saved);
             } else {
-                highScores = { easy: 0, medium: 0, hard: 0 };
+                highScores = { easy: 0, medium: 0, hard: 0, daily: 0 };
             }
             updateHighScoreDisplay();
         }
@@ -516,7 +598,7 @@
 
         // Share score function
         function shareScore() {
-            const scoreText = `🎯 I just scored ${score} points on ${currentDifficulty.toUpperCase()} mode in Neon Airsoft Pop! 🎮\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/\n\n#NeonAirsoftPop #ArcadeGame #Gaming`;
+            const scoreText = `🎯 I just scored ${score} points on ${currentDifficulty === 'daily' ? 'TODAY\'S DAILY CHALLENGE' : currentDifficulty.toUpperCase()} in Neon Airsoft Pop! 🎮\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/\n\n#NeonAirsoftPop #ArcadeGame #Gaming`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(scoreText).then(() => {
@@ -547,26 +629,80 @@
             }, 100);
         }
 
-        // Sound effects (using Web Audio API for simple beeps)
-        function playPopSound() {
+        // Advanced Sound Effects
+        function playSound(type) {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
+                const now = audioContext.currentTime;
 
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.1);
+                if (type === 'pop') {
+                    // Pop sound - high pitched beep
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'powerup') {
+                    // Power-up sound - ascending tones
+                    const frequencies = [600, 800, 1000];
+                    frequencies.forEach((freq, index) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.2, now + index * 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.05 + 0.1);
+                        osc.start(now + index * 0.05);
+                        osc.stop(now + index * 0.05 + 0.1);
+                    });
+                } else if (type === 'gameover') {
+                    // Game over sound - descending tones
+                    const frequencies = [800, 600, 400];
+                    frequencies.forEach((freq, index) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.3, now + index * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, now + index * 0.1 + 0.2);
+                        osc.start(now + index * 0.1);
+                        osc.stop(now + index * 0.1 + 0.2);
+                    });
+                }
             } catch (e) {
                 // Fallback if audio context fails
+            }
+        }
+
+        // Activate power-up
+        function activatePowerUp() {
+            if (!powerUpActive) {
+                powerUpActive = true;
+                scoreMultiplier = 2;
+                powerUpTimeLeft = 10;
+                playSound('powerup');
+                
+                const indicator = document.getElementById('powerUpIndicator');
+                indicator.style.display = 'block';
+                
+                powerUpInterval = setInterval(() => {
+                    powerUpTimeLeft--;
+                    document.getElementById('powerUpTimer').textContent = powerUpTimeLeft + 's';
+                    
+                    if (powerUpTimeLeft <= 0) {
+                        clearInterval(powerUpInterval);
+                        powerUpActive = false;
+                        scoreMultiplier = 1;
+                        indicator.style.display = 'none';
+                    }
+                }, 1000);
             }
         }
 
@@ -576,6 +712,12 @@
             document.getElementById('difficultyMenu').classList.add('hidden');
             document.getElementById('gameContainer').style.display = 'flex';
             document.getElementById('difficultyBadge').textContent = difficulty.toUpperCase();
+            
+            if (difficulty === 'daily') {
+                document.getElementById('dailyBadge').style.display = 'block';
+            } else {
+                document.getElementById('dailyBadge').style.display = 'none';
+            }
 
             resetGame();
         }
@@ -588,7 +730,10 @@
             const gameArea = document.getElementById('gameArea');
             const balloon = document.createElement('div');
             const size = Math.random() * (settings.maxSize - settings.minSize) + settings.minSize;
-            const colorClass = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Determine if this is a golden balloon
+            const isGolden = Math.random() < settings.goldenBalloonChance;
+            const colorClass = isGolden ? 'balloon-golden-color' : colors[Math.floor(Math.random() * colors.length)];
             
             balloon.className = `balloon ${colorClass}`;
             balloon.style.width = size + 'px';
@@ -596,11 +741,19 @@
             balloon.style.left = Math.random() * (gameArea.clientWidth - size) + 'px';
             balloon.style.top = Math.random() * (gameArea.clientHeight - size) + 'px';
 
-            balloon.innerHTML = `<div class="balloon-circle">●</div>`;
+            const balloonCircle = document.createElement('div');
+            balloonCircle.className = 'balloon-circle';
+            if (isGolden) {
+                balloonCircle.classList.add('balloon-golden');
+            }
+            balloonCircle.textContent = isGolden ? '⭐' : '●';
+            balloon.appendChild(balloonCircle);
+
+            balloon.isGolden = isGolden;
 
             balloon.onclick = (e) => {
                 e.stopPropagation();
-                popBalloon(balloon, colorClass);
+                popBalloon(balloon, colorClass, isGolden);
             };
 
             gameArea.appendChild(balloon);
@@ -617,10 +770,10 @@
         }
 
         // Pop a balloon
-        function popBalloon(balloon, colorClass) {
+        function popBalloon(balloon, colorClass, isGolden) {
             if (!gameActive) return;
 
-            playPopSound();
+            playSound('pop');
             triggerShake();
             
             const rect = balloon.getBoundingClientRect();
@@ -628,11 +781,17 @@
             const centerY = rect.top + rect.height / 2;
 
             // Create confetti
-            createConfetti(centerX, centerY, colorClass);
+            if (isGolden) {
+                createConfetti(centerX, centerY, 'balloon-golden-color');
+                activatePowerUp();
+            } else {
+                createConfetti(centerX, centerY, colorClass);
+            }
 
-            // Update score with difficulty multiplier
+            // Update score with difficulty multiplier and power-up multiplier
             const settings = difficultySettings[currentDifficulty];
-            const points = Math.round((10 + (combo * 5)) * settings.scoreMultiplier);
+            const basePoints = 10 + (combo * 5);
+            const points = Math.round(basePoints * settings.scoreMultiplier * scoreMultiplier);
             score += points;
             balloonsPopped++;
             combo++;
@@ -658,8 +817,13 @@
 
         // Create confetti effect
         function createConfetti(x, y, colorClass) {
-            const colorIndex = colors.indexOf(colorClass);
-            const color = neonColors[colorIndex];
+            let color;
+            if (colorClass === 'balloon-golden-color') {
+                color = '#ffaa00';
+            } else {
+                const colorIndex = colors.indexOf(colorClass);
+                color = neonColors[colorIndex];
+            }
 
             for (let i = 0; i < 8; i++) {
                 const confetti = document.createElement('div');
@@ -722,8 +886,11 @@
             gameActive = false;
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
+            clearInterval(powerUpInterval);
             document.getElementById('gameArea').style.opacity = '0.5';
             
+            playSound('gameover');
+
             // Check if this is a new high score
             if (score > (highScores[currentDifficulty] || 0)) {
                 highScores[currentDifficulty] = score;
@@ -759,11 +926,15 @@
             combo = 0;
             timeLeft = settings.timeLimit;
             gameActive = true;
+            scoreMultiplier = 1;
+            powerUpActive = false;
+            powerUpTimeLeft = 0;
 
             document.getElementById('score').textContent = score;
             document.getElementById('balloons-popped').textContent = balloonsPopped;
             document.getElementById('combo').textContent = combo;
             document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('powerUpIndicator').style.display = 'none';
             updateHighScoreDisplay();
 
             const gameArea = document.getElementById('gameArea');
@@ -774,6 +945,7 @@
             // Clear any existing intervals
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
+            clearInterval(powerUpInterval);
 
             // Start creating balloons
             for (let i = 0; i < settings.initialBalloons; i++) {
@@ -791,6 +963,7 @@
         function backToMenu() {
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
+            clearInterval(powerUpInterval);
             document.getElementById('gameContainer').style.display = 'none';
             document.getElementById('difficultyMenu').classList.remove('hidden');
         }
