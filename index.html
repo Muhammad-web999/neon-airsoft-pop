@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Airsoft Pop - Arcade Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .difficulty-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+        }
+
+        .difficulty-menu.hidden {
+            display: none;
+        }
+
+        .menu-title {
+            color: #00ffff;
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 50px;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+            text-align: center;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border: 3px solid;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 20px;
+            color: white;
+        }
+
+        .difficulty-btn.easy {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        .difficulty-btn.easy:hover {
+            background: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.9);
+            transform: scale(1.1);
+        }
+
+        .difficulty-btn.medium {
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+        }
+
+        .difficulty-btn.medium:hover {
+            background: rgba(255, 255, 0, 0.3);
+            box-shadow: 0 0 40px rgba(255, 255, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        .difficulty-btn.hard {
+            border-color: #ff006e;
+            background: rgba(255, 0, 110, 0.1);
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+        }
+
+        .difficulty-btn.hard:hover {
+            background: rgba(255, 0, 110, 0.3);
+            box-shadow: 0 0 40px rgba(255, 0, 110, 0.9);
+            transform: scale(1.1);
+        }
+
+        .difficulty-description {
+            margin-top: 30px;
+            color: #00d4ff;
+            font-size: 16px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .game-container {
+            position: relative;
+            width: 90vw;
+            max-width: 1000px;
+            height: 90vh;
+            max-height: 700px;
+            background: linear-gradient(to bottom, #1a1a3f, #0d0d1f);
+            border: 3px solid #00ffff;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), inset 0 0 40px rgba(0, 255, 255, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-header {
+            background: linear-gradient(to right, #ff006e, #00d4ff);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .difficulty-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 2px solid #00ffff;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        .stat {
+            color: #00ffff;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #00ff88;
+            margin-top: 5px;
+        }
+
+        .game-area {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.05), transparent);
+            cursor: crosshair;
+        }
+
+        .balloon {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            user-select: none;
+        }
+
+        .balloon:hover {
+            transform: scale(1.1);
+        }
+
+        .balloon-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 20px currentColor, inset 0 0 10px rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* Neon color variations */
+        .balloon-pink {
+            color: #ff006e;
+            text-shadow: 0 0 10px #ff006e;
+        }
+
+        .balloon-cyan {
+            color: #00d4ff;
+            text-shadow: 0 0 10px #00d4ff;
+        }
+
+        .balloon-lime {
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .balloon-purple {
+            color: #b537f2;
+            text-shadow: 0 0 10px #b537f2;
+        }
+
+        .balloon-orange {
+            color: #ff8c00;
+            text-shadow: 0 0 10px #ff8c00;
+        }
+
+        .balloon-yellow {
+            color: #ffff00;
+            text-shadow: 0 0 10px #ffff00;
+        }
+
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            font-size: 20px;
+        }
+
+        .game-footer {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            text-align: center;
+            border-top: 2px solid #00ffff;
+            color: #00ff88;
+            font-size: 14px;
+        }
+
+        .footer-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .reset-button, .menu-button {
+            background: linear-gradient(to right, #ff006e, #00d4ff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .reset-button:hover, .menu-button:hover {
+            box-shadow: 0 0 25px rgba(255, 0, 110, 0.9);
+            transform: scale(1.05);
+        }
+
+        .reset-button:active, .menu-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .game-header {
+                font-size: 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat {
+                font-size: 14px;
+            }
+
+            .balloon-circle {
+                font-size: 18px;
+            }
+
+            .difficulty-buttons {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .difficulty-btn {
+                width: 200px;
+            }
+
+            .menu-title {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Difficulty Menu -->
+    <div class="difficulty-menu" id="difficultyMenu">
+        <div class="menu-title">🎯 SELECT DIFFICULTY 🎯</div>
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn easy" onclick="startGame('easy')">
+                🟢 EASY
+            </button>
+            <button class="difficulty-btn medium" onclick="startGame('medium')">
+                🟡 MEDIUM
+            </button>
+            <button class="difficulty-btn hard" onclick="startGame('hard')">
+                🔴 HARD
+            </button>
+        </div>
+        <div class="difficulty-description">
+            <p><strong>EASY:</strong> Larger balloons, slower spawning, 90 seconds</p>
+            <p><strong>MEDIUM:</strong> Normal balloons, moderate spawning, 60 seconds</p>
+            <p><strong>HARD:</strong> Tiny balloons, rapid spawning, 45 seconds</p>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="gameContainer" style="display: none;">
+        <div class="game-header">
+            🎯 NEON AIRSOFT POP 🎯
+            <div class="difficulty-badge" id="difficultyBadge">MEDIUM</div>
+        </div>
+        
+        <div class="game-stats">
+            <div class="stat">
+                <div id="score">0</div>
+                <div class="stat-label">SCORE</div>
+            </div>
+            <div class="stat">
+                <div id="balloons-popped">0</div>
+                <div class="stat-label">POPPED</div>
+            </div>
+            <div class="stat">
+                <div id="combo">0</div>
+                <div class="stat-label">COMBO</div>
+            </div>
+            <div class="stat">
+                <div id="timer">60</div>
+                <div class="stat-label">TIME</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea"></div>
+
+        <div class="game-footer">
+            <div>Click or tap the balloons to pop them! Relax and enjoy the satisfying pops.</div>
+            <div class="footer-buttons">
+                <button class="reset-button" onclick="resetGame()">RESET GAME</button>
+                <button class="menu-button" onclick="backToMenu()">BACK TO MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Difficulty Settings
+        const difficultySettings = {
+            easy: {
+                minSize: 50,
+                maxSize: 90,
+                spawnRate: 800,
+                initialBalloons: 3,
+                timeLimit: 90,
+                scoreMultiplier: 1,
+                balloonLifetime: 7000
+            },
+            medium: {
+                minSize: 40,
+                maxSize: 80,
+                spawnRate: 500,
+                initialBalloons: 5,
+                timeLimit: 60,
+                scoreMultiplier: 1.5,
+                balloonLifetime: 5000
+            },
+            hard: {
+                minSize: 25,
+                maxSize: 60,
+                spawnRate: 300,
+                initialBalloons: 7,
+                timeLimit: 45,
+                scoreMultiplier: 2,
+                balloonLifetime: 3000
+            }
+        };
+
+        // Game Variables
+        let score = 0;
+        let balloonsPopped = 0;
+        let combo = 0;
+        let timeLeft = 60;
+        let gameActive = true;
+        let balloons = [];
+        let currentDifficulty = 'medium';
+        let spawnInterval = null;
+        let timerInterval = null;
+
+        // Colors for balloons
+        const colors = ['balloon-pink', 'balloon-cyan', 'balloon-lime', 'balloon-purple', 'balloon-orange', 'balloon-yellow'];
+        const neonColors = ['#ff006e', '#00d4ff', '#00ff88', '#b537f2', '#ff8c00', '#ffff00'];
+        const confettiEmojis = ['🎉', '✨', '💥', '⭐', '🌟', '💫', '🎊'];
+
+        // Sound effects (using Web Audio API for simple beeps)
+        function playPopSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                // Fallback if audio context fails
+            }
+        }
+
+        // Start game with selected difficulty
+        function startGame(difficulty) {
+            currentDifficulty = difficulty;
+            document.getElementById('difficultyMenu').classList.add('hidden');
+            document.getElementById('gameContainer').style.display = 'flex';
+            document.getElementById('difficultyBadge').textContent = difficulty.toUpperCase();
+
+            resetGame();
+        }
+
+        // Create a new balloon
+        function createBalloon() {
+            if (!gameActive) return;
+
+            const settings = difficultySettings[currentDifficulty];
+            const gameArea = document.getElementById('gameArea');
+            const balloon = document.createElement('div');
+            const size = Math.random() * (settings.maxSize - settings.minSize) + settings.minSize;
+            const colorClass = colors[Math.floor(Math.random() * colors.length)];
+            
+            balloon.className = `balloon ${colorClass}`;
+            balloon.style.width = size + 'px';
+            balloon.style.height = size + 'px';
+            balloon.style.left = Math.random() * (gameArea.clientWidth - size) + 'px';
+            balloon.style.top = Math.random() * (gameArea.clientHeight - size) + 'px';
+
+            balloon.innerHTML = `<div class="balloon-circle">●</div>`;
+
+            balloon.onclick = (e) => {
+                e.stopPropagation();
+                popBalloon(balloon, colorClass);
+            };
+
+            gameArea.appendChild(balloon);
+            balloons.push(balloon);
+
+            // Remove balloon after lifetime if not popped
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.parentNode.removeChild(balloon);
+                    balloons = balloons.filter(b => b !== balloon);
+                    combo = 0;
+                }
+            }, settings.balloonLifetime);
+        }
+
+        // Pop a balloon
+        function popBalloon(balloon, colorClass) {
+            if (!gameActive) return;
+
+            playPopSound();
+            
+            const rect = balloon.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            // Create confetti
+            createConfetti(centerX, centerY, colorClass);
+
+            // Update score with difficulty multiplier
+            const settings = difficultySettings[currentDifficulty];
+            const points = Math.round((10 + (combo * 5)) * settings.scoreMultiplier);
+            score += points;
+            balloonsPopped++;
+            combo++;
+
+            // Update UI
+            document.getElementById('score').textContent = score;
+            document.getElementById('balloons-popped').textContent = balloonsPopped;
+            document.getElementById('combo').textContent = combo;
+
+            // Remove balloon
+            balloon.style.opacity = '0';
+            balloon.style.transform = 'scale(0)';
+            setTimeout(() => {
+                if (balloon.parentNode) {
+                    balloon.parentNode.removeChild(balloon);
+                }
+                balloons = balloons.filter(b => b !== balloon);
+            }, 300);
+
+            // Create new balloon
+            setTimeout(() => createBalloon(), 200);
+        }
+
+        // Create confetti effect
+        function createConfetti(x, y, colorClass) {
+            const colorIndex = colors.indexOf(colorClass);
+            const color = neonColors[colorIndex];
+
+            for (let i = 0; i < 8; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)];
+                confetti.style.left = x + 'px';
+                confetti.style.top = y + 'px';
+                confetti.style.color = color;
+                confetti.style.textShadow = `0 0 10px ${color}`;
+
+                const angle = (Math.PI * 2 * i) / 8;
+                const velocity = 5 + Math.random() * 5;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                document.body.appendChild(confetti);
+
+                let posX = x;
+                let posY = y;
+                let velX = vx;
+                let velY = vy;
+                let life = 1;
+
+                const animate = () => {
+                    posX += velX;
+                    posY += velY;
+                    velY += 0.2; // gravity
+                    life -= 0.02;
+
+                    confetti.style.left = posX + 'px';
+                    confetti.style.top = posY + 'px';
+                    confetti.style.opacity = life;
+
+                    if (life > 0) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        confetti.remove();
+                    }
+                };
+
+                animate();
+            }
+        }
+
+        // Timer
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // End game
+        function endGame() {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            document.getElementById('gameArea').style.opacity = '0.5';
+            
+            // Show final message
+            const gameArea = document.getElementById('gameArea');
+            const message = document.createElement('div');
+            message.style.position = 'absolute';
+            message.style.top = '50%';
+            message.style.left = '50%';
+            message.style.transform = 'translate(-50%, -50%)';
+            message.style.color = '#00ffff';
+            message.style.fontSize = '36px';
+            message.style.fontWeight = 'bold';
+            message.style.textAlign = 'center';
+            message.style.textShadow = '0 0 20px #00ffff';
+            message.style.zIndex = '1000';
+            message.innerHTML = `GAME OVER!<br><span style="font-size: 24px;">Final Score: ${score}</span><br><span style="font-size: 18px;">Difficulty: ${currentDifficulty.toUpperCase()}</span>`;
+            gameArea.appendChild(message);
+        }
+
+        // Reset game
+        function resetGame() {
+            const settings = difficultySettings[currentDifficulty];
+            score = 0;
+            balloonsPopped = 0;
+            combo = 0;
+            timeLeft = settings.timeLimit;
+            gameActive = true;
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('balloons-popped').textContent = balloonsPopped;
+            document.getElementById('combo').textContent = combo;
+            document.getElementById('timer').textContent = timeLeft;
+
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            gameArea.style.opacity = '1';
+            balloons = [];
+
+            // Clear any existing intervals
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+
+            // Start creating balloons
+            for (let i = 0; i < settings.initialBalloons; i++) {
+                setTimeout(() => createBalloon(), i * 300);
+            }
+
+            // Start spawn interval
+            spawnInterval = setInterval(() => createBalloon(), settings.spawnRate);
+
+            // Start timer
+            startTimer();
+        }
+
+        // Back to menu
+        function backToMenu() {
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('difficultyMenu').classList.remove('hidden');
+        }
+
+        // Initialize game on load
+        window.addEventListener('load', () => {
+            // Show difficulty menu on load
+        });
+    </script>
+</body>
+</html>
