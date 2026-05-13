@@ -129,6 +129,17 @@
             flex-direction: column;
         }
 
+        .game-container.shake {
+            animation: shake 0.1s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-5px, -5px); }
+            50% { transform: translate(5px, 5px); }
+            75% { transform: translate(-5px, 5px); }
+        }
+
         .game-header {
             background: linear-gradient(to right, #ff006e, #00d4ff);
             padding: 20px;
@@ -157,6 +168,7 @@
             background: rgba(0, 255, 255, 0.1);
             padding: 15px;
             border-bottom: 2px solid #00ffff;
+            flex-wrap: wrap;
         }
 
         .stat {
@@ -170,6 +182,25 @@
             font-size: 12px;
             color: #00ff88;
             margin-top: 5px;
+        }
+
+        .high-score-section {
+            background: rgba(255, 0, 110, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #ff006e;
+        }
+
+        .high-score-label {
+            font-size: 12px;
+            color: #ff006e;
+        }
+
+        .high-score-value {
+            font-size: 16px;
+            color: #ff006e;
+            font-weight: bold;
         }
 
         .game-area {
@@ -254,9 +285,10 @@
             gap: 10px;
             justify-content: center;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
-        .reset-button, .menu-button {
+        .reset-button, .menu-button, .share-button {
             background: linear-gradient(to right, #ff006e, #00d4ff);
             color: white;
             border: none;
@@ -269,13 +301,41 @@
             transition: all 0.3s ease;
         }
 
-        .reset-button:hover, .menu-button:hover {
+        .reset-button:hover, .menu-button:hover, .share-button:hover {
             box-shadow: 0 0 25px rgba(255, 0, 110, 0.9);
             transform: scale(1.05);
         }
 
-        .reset-button:active, .menu-button:active {
+        .reset-button:active, .menu-button:active, .share-button:active {
             transform: scale(0.95);
+        }
+
+        .share-button {
+            background: linear-gradient(to right, #00ff88, #00d4ff);
+        }
+
+        .share-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 255, 136, 0.9);
+            color: #0d0d1f;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            z-index: 3000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         /* Mobile responsiveness */
@@ -305,6 +365,14 @@
 
             .menu-title {
                 font-size: 32px;
+            }
+
+            .footer-buttons {
+                flex-direction: column;
+            }
+
+            .reset-button, .menu-button, .share-button {
+                width: 100%;
             }
         }
     </style>
@@ -355,6 +423,10 @@
                 <div id="timer">60</div>
                 <div class="stat-label">TIME</div>
             </div>
+            <div class="stat high-score-section">
+                <div class="high-score-label">🏆 HIGH SCORE</div>
+                <div class="high-score-value" id="highScore">0</div>
+            </div>
         </div>
 
         <div class="game-area" id="gameArea"></div>
@@ -362,6 +434,7 @@
         <div class="game-footer">
             <div>Click or tap the balloons to pop them! Relax and enjoy the satisfying pops.</div>
             <div class="footer-buttons">
+                <button class="share-button" onclick="shareScore()">📤 SHARE SCORE</button>
                 <button class="reset-button" onclick="resetGame()">RESET GAME</button>
                 <button class="menu-button" onclick="backToMenu()">BACK TO MENU</button>
             </div>
@@ -410,11 +483,69 @@
         let currentDifficulty = 'medium';
         let spawnInterval = null;
         let timerInterval = null;
+        let highScores = {};
 
         // Colors for balloons
         const colors = ['balloon-pink', 'balloon-cyan', 'balloon-lime', 'balloon-purple', 'balloon-orange', 'balloon-yellow'];
         const neonColors = ['#ff006e', '#00d4ff', '#00ff88', '#b537f2', '#ff8c00', '#ffff00'];
         const confettiEmojis = ['🎉', '✨', '💥', '⭐', '🌟', '💫', '🎊'];
+
+        // Load high scores from localStorage
+        function loadHighScores() {
+            const saved = localStorage.getItem('neonAirsoftPopHighScores');
+            if (saved) {
+                highScores = JSON.parse(saved);
+            } else {
+                highScores = { easy: 0, medium: 0, hard: 0 };
+            }
+            updateHighScoreDisplay();
+        }
+
+        // Save high scores to localStorage
+        function saveHighScores() {
+            localStorage.setItem('neonAirsoftPopHighScores', JSON.stringify(highScores));
+        }
+
+        // Update high score display
+        function updateHighScoreDisplay() {
+            const highScoreElement = document.getElementById('highScore');
+            if (highScoreElement) {
+                highScoreElement.textContent = highScores[currentDifficulty] || 0;
+            }
+        }
+
+        // Share score function
+        function shareScore() {
+            const scoreText = `🎯 I just scored ${score} points on ${currentDifficulty.toUpperCase()} mode in Neon Airsoft Pop! 🎮\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/\n\n#NeonAirsoftPop #ArcadeGame #Gaming`;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(scoreText).then(() => {
+                showShareNotification();
+            }).catch(err => {
+                alert('Score: ' + score + '\n\nCopy this and share on social media!');
+            });
+        }
+
+        // Show share notification
+        function showShareNotification() {
+            const notification = document.createElement('div');
+            notification.className = 'share-notification';
+            notification.textContent = '✅ Score copied to clipboard!';
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Screen shake effect
+        function triggerShake() {
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.classList.add('shake');
+            setTimeout(() => {
+                gameContainer.classList.remove('shake');
+            }, 100);
+        }
 
         // Sound effects (using Web Audio API for simple beeps)
         function playPopSound() {
@@ -490,6 +621,7 @@
             if (!gameActive) return;
 
             playPopSound();
+            triggerShake();
             
             const rect = balloon.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -592,6 +724,12 @@
             clearInterval(timerInterval);
             document.getElementById('gameArea').style.opacity = '0.5';
             
+            // Check if this is a new high score
+            if (score > (highScores[currentDifficulty] || 0)) {
+                highScores[currentDifficulty] = score;
+                saveHighScores();
+            }
+
             // Show final message
             const gameArea = document.getElementById('gameArea');
             const message = document.createElement('div');
@@ -605,7 +743,11 @@
             message.style.textAlign = 'center';
             message.style.textShadow = '0 0 20px #00ffff';
             message.style.zIndex = '1000';
-            message.innerHTML = `GAME OVER!<br><span style="font-size: 24px;">Final Score: ${score}</span><br><span style="font-size: 18px;">Difficulty: ${currentDifficulty.toUpperCase()}</span>`;
+            
+            const isNewHighScore = score === highScores[currentDifficulty];
+            const highScoreText = isNewHighScore ? '<br><span style="color: #ff006e; font-size: 28px;">🏆 NEW HIGH SCORE! 🏆</span>' : '';
+            
+            message.innerHTML = `GAME OVER!<br><span style="font-size: 24px;">Final Score: ${score}</span><br><span style="font-size: 18px;">Difficulty: ${currentDifficulty.toUpperCase()}</span>${highScoreText}`;
             gameArea.appendChild(message);
         }
 
@@ -622,6 +764,7 @@
             document.getElementById('balloons-popped').textContent = balloonsPopped;
             document.getElementById('combo').textContent = combo;
             document.getElementById('timer').textContent = timeLeft;
+            updateHighScoreDisplay();
 
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '';
@@ -654,7 +797,7 @@
 
         // Initialize game on load
         window.addEventListener('load', () => {
-            // Show difficulty menu on load
+            loadHighScores();
         });
     </script>
 </body>
