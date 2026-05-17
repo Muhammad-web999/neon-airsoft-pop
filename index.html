@@ -250,6 +250,13 @@
             cursor: crosshair;
         }
 
+        #confettiCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+        }
+
         .balloon {
             position: absolute;
             cursor: pointer;
@@ -317,12 +324,6 @@
         .balloon-golden-color {
             color: #ffaa00;
             text-shadow: 0 0 10px #ffaa00;
-        }
-
-        .confetti {
-            position: fixed;
-            pointer-events: none;
-            font-size: 20px;
         }
 
         .game-footer {
@@ -494,7 +495,9 @@
             </div>
         </div>
 
-        <div class="game-area" id="gameArea"></div>
+        <div class="game-area" id="gameArea">
+            <canvas id="confettiCanvas"></canvas>
+        </div>
 
         <div class="game-footer">
             <div>Click or tap the balloons to pop them! Watch for Golden Balloons! ⭐</div>
@@ -567,10 +570,29 @@
         let powerUpInterval = null;
         let scoreMultiplier = 1;
 
+        // Audio Context - REUSED (PERFORMANCE FIX)
+        let audioContext = null;
+
+        // Canvas for Confetti - PERFORMANCE FIX
+        let confettiCanvas = null;
+        let confettiCtx = null;
+        let confettiParticles = [];
+
         // Colors for balloons
         const colors = ['balloon-pink', 'balloon-cyan', 'balloon-lime', 'balloon-purple', 'balloon-orange', 'balloon-yellow'];
         const neonColors = ['#ff006e', '#00d4ff', '#00ff88', '#b537f2', '#ff8c00', '#ffff00'];
         const confettiEmojis = ['🎉', '✨', '💥', '⭐', '🌟', '💫', '🎊'];
+
+        // Initialize Audio Context Once (PERFORMANCE FIX)
+        function initAudioContext() {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+        }
 
         // Load high scores from localStorage
         function loadHighScores() {
@@ -600,7 +622,6 @@
         function shareScore() {
             const scoreText = `🎯 I just scored ${score} points on ${currentDifficulty === 'daily' ? 'TODAY\'S DAILY CHALLENGE' : currentDifficulty.toUpperCase()} in Neon Airsoft Pop! 🎮\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/\n\n#NeonAirsoftPop #ArcadeGame #Gaming`;
             
-            // Copy to clipboard
             navigator.clipboard.writeText(scoreText).then(() => {
                 showShareNotification();
             }).catch(err => {
@@ -629,14 +650,14 @@
             }, 100);
         }
 
-        // Advanced Sound Effects
+        // Optimized Sound Effects (REUSE AUDIO CONTEXT)
         function playSound(type) {
+            if (!audioContext) return;
+            
             try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const now = audioContext.currentTime;
 
                 if (type === 'pop') {
-                    // Pop sound - high pitched beep
                     const osc = audioContext.createOscillator();
                     const gain = audioContext.createGain();
                     osc.connect(gain);
@@ -648,7 +669,6 @@
                     osc.start(now);
                     osc.stop(now + 0.1);
                 } else if (type === 'powerup') {
-                    // Power-up sound - ascending tones
                     const frequencies = [600, 800, 1000];
                     frequencies.forEach((freq, index) => {
                         const osc = audioContext.createOscillator();
@@ -662,7 +682,6 @@
                         osc.stop(now + index * 0.05 + 0.1);
                     });
                 } else if (type === 'gameover') {
-                    // Game over sound - descending tones
                     const frequencies = [800, 600, 400];
                     frequencies.forEach((freq, index) => {
                         const osc = audioContext.createOscillator();
@@ -677,7 +696,67 @@
                     });
                 }
             } catch (e) {
-                // Fallback if audio context fails
+                // Silently fail if audio fails
+            }
+        }
+
+        // Canvas-based Confetti (PERFORMANCE FIX - MUCH FASTER)
+        function createConfetti(x, y, colorClass) {
+            if (!confettiCtx) return;
+
+            let color;
+            if (colorClass === 'balloon-golden-color') {
+                color = '#ffaa00';
+            } else {
+                const colorIndex = colors.indexOf(colorClass);
+                color = neonColors[colorIndex];
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 * i) / 8;
+                const velocity = 5 + Math.random() * 5;
+                const vx = Math.cos(angle) * velocity;
+                const vy = Math.sin(angle) * velocity;
+
+                confettiParticles.push({
+                    x: x,
+                    y: y,
+                    vx: vx,
+                    vy: vy,
+                    life: 1,
+                    color: color,
+                    emoji: confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)]
+                });
+            }
+        }
+
+        // Animate Confetti on Canvas
+        function animateConfetti() {
+            if (!confettiCtx) return;
+
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+            for (let i = confettiParticles.length - 1; i >= 0; i--) {
+                const p = confettiParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2; // gravity
+                p.life -= 0.02;
+
+                if (p.life > 0) {
+                    confettiCtx.globalAlpha = p.life;
+                    confettiCtx.fillStyle = p.color;
+                    confettiCtx.font = '20px Arial';
+                    confettiCtx.fillText(p.emoji, p.x, p.y);
+                } else {
+                    confettiParticles.splice(i, 1);
+                }
+            }
+
+            confettiCtx.globalAlpha = 1;
+
+            if (confettiParticles.length > 0) {
+                requestAnimationFrame(animateConfetti);
             }
         }
 
@@ -719,6 +798,14 @@
                 document.getElementById('dailyBadge').style.display = 'none';
             }
 
+            // Setup Canvas
+            confettiCanvas = document.getElementById('confettiCanvas');
+            const gameArea = document.getElementById('gameArea');
+            confettiCanvas.width = gameArea.clientWidth;
+            confettiCanvas.height = gameArea.clientHeight;
+            confettiCtx = confettiCanvas.getContext('2d');
+
+            initAudioContext();
             resetGame();
         }
 
@@ -731,7 +818,6 @@
             const balloon = document.createElement('div');
             const size = Math.random() * (settings.maxSize - settings.minSize) + settings.minSize;
             
-            // Determine if this is a golden balloon
             const isGolden = Math.random() < settings.goldenBalloonChance;
             const colorClass = isGolden ? 'balloon-golden-color' : colors[Math.floor(Math.random() * colors.length)];
             
@@ -777,18 +863,17 @@
             triggerShake();
             
             const rect = balloon.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
+            const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+            const centerX = rect.left - gameAreaRect.left + rect.width / 2;
+            const centerY = rect.top - gameAreaRect.top + rect.height / 2;
 
-            // Create confetti
+            createConfetti(centerX, centerY, colorClass);
+            animateConfetti();
+
             if (isGolden) {
-                createConfetti(centerX, centerY, 'balloon-golden-color');
                 activatePowerUp();
-            } else {
-                createConfetti(centerX, centerY, colorClass);
             }
 
-            // Update score with difficulty multiplier and power-up multiplier
             const settings = difficultySettings[currentDifficulty];
             const basePoints = 10 + (combo * 5);
             const points = Math.round(basePoints * settings.scoreMultiplier * scoreMultiplier);
@@ -796,12 +881,10 @@
             balloonsPopped++;
             combo++;
 
-            // Update UI
             document.getElementById('score').textContent = score;
             document.getElementById('balloons-popped').textContent = balloonsPopped;
             document.getElementById('combo').textContent = combo;
 
-            // Remove balloon
             balloon.style.opacity = '0';
             balloon.style.transform = 'scale(0)';
             setTimeout(() => {
@@ -811,61 +894,7 @@
                 balloons = balloons.filter(b => b !== balloon);
             }, 300);
 
-            // Create new balloon
             setTimeout(() => createBalloon(), 200);
-        }
-
-        // Create confetti effect
-        function createConfetti(x, y, colorClass) {
-            let color;
-            if (colorClass === 'balloon-golden-color') {
-                color = '#ffaa00';
-            } else {
-                const colorIndex = colors.indexOf(colorClass);
-                color = neonColors[colorIndex];
-            }
-
-            for (let i = 0; i < 8; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.textContent = confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)];
-                confetti.style.left = x + 'px';
-                confetti.style.top = y + 'px';
-                confetti.style.color = color;
-                confetti.style.textShadow = `0 0 10px ${color}`;
-
-                const angle = (Math.PI * 2 * i) / 8;
-                const velocity = 5 + Math.random() * 5;
-                const vx = Math.cos(angle) * velocity;
-                const vy = Math.sin(angle) * velocity;
-
-                document.body.appendChild(confetti);
-
-                let posX = x;
-                let posY = y;
-                let velX = vx;
-                let velY = vy;
-                let life = 1;
-
-                const animate = () => {
-                    posX += velX;
-                    posY += velY;
-                    velY += 0.2; // gravity
-                    life -= 0.02;
-
-                    confetti.style.left = posX + 'px';
-                    confetti.style.top = posY + 'px';
-                    confetti.style.opacity = life;
-
-                    if (life > 0) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        confetti.remove();
-                    }
-                };
-
-                animate();
-            }
         }
 
         // Timer
@@ -891,13 +920,11 @@
             
             playSound('gameover');
 
-            // Check if this is a new high score
             if (score > (highScores[currentDifficulty] || 0)) {
                 highScores[currentDifficulty] = score;
                 saveHighScores();
             }
 
-            // Show final message
             const gameArea = document.getElementById('gameArea');
             const message = document.createElement('div');
             message.style.position = 'absolute';
@@ -929,6 +956,7 @@
             scoreMultiplier = 1;
             powerUpActive = false;
             powerUpTimeLeft = 0;
+            confettiParticles = []; // CLEAR CONFETTI (PERFORMANCE FIX)
 
             document.getElementById('score').textContent = score;
             document.getElementById('balloons-popped').textContent = balloonsPopped;
@@ -938,24 +966,24 @@
             updateHighScoreDisplay();
 
             const gameArea = document.getElementById('gameArea');
-            gameArea.innerHTML = '';
+            gameArea.innerHTML = '<canvas id="confettiCanvas"></canvas>';
             gameArea.style.opacity = '1';
             balloons = [];
 
-            // Clear any existing intervals
+            confettiCanvas = document.getElementById('confettiCanvas');
+            confettiCanvas.width = gameArea.clientWidth;
+            confettiCanvas.height = gameArea.clientHeight;
+            confettiCtx = confettiCanvas.getContext('2d');
+
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
             clearInterval(powerUpInterval);
 
-            // Start creating balloons
             for (let i = 0; i < settings.initialBalloons; i++) {
                 setTimeout(() => createBalloon(), i * 300);
             }
 
-            // Start spawn interval
             spawnInterval = setInterval(() => createBalloon(), settings.spawnRate);
-
-            // Start timer
             startTimer();
         }
 
@@ -964,6 +992,7 @@
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
             clearInterval(powerUpInterval);
+            confettiParticles = []; // CLEAR CONFETTI (PERFORMANCE FIX)
             document.getElementById('gameContainer').style.display = 'none';
             document.getElementById('difficultyMenu').classList.remove('hidden');
         }
