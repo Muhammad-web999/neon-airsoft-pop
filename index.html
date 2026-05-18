@@ -155,10 +155,10 @@
 
         .game-header {
             background: linear-gradient(to right, #ff006e, #00d4ff);
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             color: white;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(255, 0, 110, 0.8);
             letter-spacing: 2px;
@@ -166,39 +166,60 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 10px;
+            min-height: auto;
+        }
+
+        .header-title {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .header-badges {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .difficulty-badge {
             background: rgba(0, 0, 0, 0.5);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
             border: 2px solid #00ffff;
+            white-space: nowrap;
         }
 
         .daily-badge {
             background: rgba(255, 170, 0, 0.3);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
             border: 2px solid #ffaa00;
             color: #ffaa00;
             text-shadow: 0 0 10px #ffaa00;
+            white-space: nowrap;
         }
 
         .power-up-indicator {
             position: absolute;
-            top: 20px;
+            top: 80px;
             left: 20px;
             color: #ffaa00;
-            font-size: 24px;
+            font-size: 18px;
             text-shadow: 0 0 10px #ffaa00;
             z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 2px solid #ffaa00;
         }
 
         .power-up-timer {
             color: #ffff00;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
         }
 
@@ -206,39 +227,41 @@
             display: flex;
             justify-content: space-around;
             background: rgba(0, 255, 255, 0.1);
-            padding: 15px;
+            padding: 12px;
             border-bottom: 2px solid #00ffff;
             flex-wrap: wrap;
+            gap: 10px;
         }
 
         .stat {
             color: #00ffff;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+            text-align: center;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #00ff88;
-            margin-top: 5px;
+            margin-top: 3px;
         }
 
         .high-score-section {
             background: rgba(255, 0, 110, 0.1);
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
             text-align: center;
             border: 1px solid #ff006e;
         }
 
         .high-score-label {
-            font-size: 12px;
+            font-size: 11px;
             color: #ff006e;
         }
 
         .high-score-value {
-            font-size: 16px;
+            font-size: 14px;
             color: #ff006e;
             font-weight: bold;
         }
@@ -328,11 +351,11 @@
 
         .game-footer {
             background: rgba(0, 255, 255, 0.1);
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             border-top: 2px solid #00ffff;
             color: #00ff88;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         .footer-buttons {
@@ -351,7 +374,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             box-shadow: 0 0 15px rgba(255, 0, 110, 0.6);
             transition: all 0.3s ease;
         }
@@ -366,6 +389,114 @@
         }
 
         .share-button {
+            background: linear-gradient(to right, #00ff88, #00d4ff);
+        }
+
+        /* Game Over Screen */
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 10, 46, 0.95), rgba(22, 33, 62, 0.95));
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+            padding: 20px;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .game-over-screen.show {
+            display: flex;
+        }
+
+        .game-over-title {
+            color: #00d4ff;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .game-over-score {
+            color: #00ffff;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+
+        .game-over-score-label {
+            color: #00ff88;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .game-over-difficulty {
+            color: #ffaa00;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.8);
+        }
+
+        .high-score-trophy {
+            font-size: 60px;
+            margin-bottom: 10px;
+            animation: bounce 0.6s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .new-high-score-text {
+            color: #ff006e;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 0, 110, 0.8);
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .game-over-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .game-over-btn {
+            background: linear-gradient(to right, #ff006e, #00d4ff);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 0 20px rgba(255, 0, 110, 0.6);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .game-over-btn:hover {
+            box-shadow: 0 0 30px rgba(255, 0, 110, 0.9);
+            transform: scale(1.05);
+        }
+
+        .game-over-btn:active {
+            transform: scale(0.95);
+        }
+
+        .game-over-btn.share {
             background: linear-gradient(to right, #00ff88, #00d4ff);
         }
 
@@ -396,13 +527,29 @@
         /* Mobile responsiveness */
         @media (max-width: 600px) {
             .game-header {
-                font-size: 20px;
-                flex-direction: column;
-                gap: 10px;
+                font-size: 18px;
+                padding: 12px 10px;
+            }
+
+            .header-title {
+                min-width: 150px;
+            }
+
+            .header-badges {
+                gap: 5px;
+            }
+
+            .difficulty-badge, .daily-badge {
+                padding: 4px 8px;
+                font-size: 10px;
             }
 
             .stat {
-                font-size: 14px;
+                font-size: 13px;
+            }
+
+            .stat-label {
+                font-size: 10px;
             }
 
             .balloon-circle {
@@ -428,6 +575,27 @@
 
             .reset-button, .menu-button, .share-button {
                 width: 100%;
+            }
+
+            .game-over-title {
+                font-size: 36px;
+            }
+
+            .game-over-score {
+                font-size: 28px;
+            }
+
+            .high-score-trophy {
+                font-size: 50px;
+            }
+
+            .new-high-score-text {
+                font-size: 20px;
+            }
+
+            .game-over-btn {
+                padding: 12px 24px;
+                font-size: 14px;
             }
         }
     </style>
@@ -465,8 +633,8 @@
         </div>
 
         <div class="game-header">
-            🎯 NEON AIRSOFT POP 🎯
-            <div id="headerBadges" style="display: flex; gap: 10px; align-items: center;">
+            <div class="header-title">🎯 NEON AIRSOFT POP 🎯</div>
+            <div class="header-badges" id="headerBadges">
                 <div class="difficulty-badge" id="difficultyBadge">MEDIUM</div>
                 <div class="daily-badge" id="dailyBadge" style="display: none;">📅 TODAY</div>
             </div>
@@ -499,13 +667,27 @@
             <canvas id="confettiCanvas"></canvas>
         </div>
 
+        <!-- Game Over Screen -->
+        <div class="game-over-screen" id="gameOverScreen">
+            <div class="game-over-title">GAME OVER!</div>
+            <div class="game-over-score-label">Final Score:</div>
+            <div class="game-over-score" id="finalScore">0</div>
+            <div class="game-over-difficulty" id="finalDifficulty">Difficulty: MEDIUM</div>
+            
+            <div id="highScoreContainer" style="display: none;">
+                <div class="high-score-trophy">🏆</div>
+                <div class="new-high-score-text">NEW HIGH SCORE!</div>
+            </div>
+
+            <div class="game-over-buttons">
+                <button class="game-over-btn share" onclick="shareScore()">📤 SHARE SCORE</button>
+                <button class="game-over-btn" onclick="resetGame()">🔄 RESET GAME</button>
+                <button class="game-over-btn" onclick="backToMenu()">🏠 BACK TO MENU</button>
+            </div>
+        </div>
+
         <div class="game-footer">
             <div>Click or tap the balloons to pop them! Watch for Golden Balloons! ⭐</div>
-            <div class="footer-buttons">
-                <button class="share-button" onclick="shareScore()">📤 SHARE SCORE</button>
-                <button class="reset-button" onclick="resetGame()">RESET GAME</button>
-                <button class="menu-button" onclick="backToMenu()">BACK TO MENU</button>
-            </div>
         </div>
     </div>
 
@@ -910,39 +1092,35 @@
             }, 1000);
         }
 
-        // End game
+        // End game - Show Game Over Screen
         function endGame() {
             gameActive = false;
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
             clearInterval(powerUpInterval);
-            document.getElementById('gameArea').style.opacity = '0.5';
             
             playSound('gameover');
 
-            if (score > (highScores[currentDifficulty] || 0)) {
+            // Check if new high score
+            const isNewHighScore = score > (highScores[currentDifficulty] || 0);
+            if (isNewHighScore) {
                 highScores[currentDifficulty] = score;
                 saveHighScores();
             }
 
-            const gameArea = document.getElementById('gameArea');
-            const message = document.createElement('div');
-            message.style.position = 'absolute';
-            message.style.top = '50%';
-            message.style.left = '50%';
-            message.style.transform = 'translate(-50%, -50%)';
-            message.style.color = '#00ffff';
-            message.style.fontSize = '36px';
-            message.style.fontWeight = 'bold';
-            message.style.textAlign = 'center';
-            message.style.textShadow = '0 0 20px #00ffff';
-            message.style.zIndex = '1000';
+            // Update Game Over Screen
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalDifficulty').textContent = `Difficulty: ${currentDifficulty.toUpperCase()}`;
             
-            const isNewHighScore = score === highScores[currentDifficulty];
-            const highScoreText = isNewHighScore ? '<br><span style="color: #ff006e; font-size: 28px;">🏆 NEW HIGH SCORE! 🏆</span>' : '';
-            
-            message.innerHTML = `GAME OVER!<br><span style="font-size: 24px;">Final Score: ${score}</span><br><span style="font-size: 18px;">Difficulty: ${currentDifficulty.toUpperCase()}</span>${highScoreText}`;
-            gameArea.appendChild(message);
+            const highScoreContainer = document.getElementById('highScoreContainer');
+            if (isNewHighScore) {
+                highScoreContainer.style.display = 'block';
+            } else {
+                highScoreContainer.style.display = 'none';
+            }
+
+            // Show Game Over Screen
+            document.getElementById('gameOverScreen').classList.add('show');
         }
 
         // Reset game
@@ -963,11 +1141,11 @@
             document.getElementById('combo').textContent = combo;
             document.getElementById('timer').textContent = timeLeft;
             document.getElementById('powerUpIndicator').style.display = 'none';
+            document.getElementById('gameOverScreen').classList.remove('show');
             updateHighScoreDisplay();
 
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '<canvas id="confettiCanvas"></canvas>';
-            gameArea.style.opacity = '1';
             balloons = [];
 
             confettiCanvas = document.getElementById('confettiCanvas');
@@ -994,6 +1172,7 @@
             clearInterval(powerUpInterval);
             confettiParticles = []; // CLEAR CONFETTI (PERFORMANCE FIX)
             document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('gameOverScreen').classList.remove('show');
             document.getElementById('difficultyMenu').classList.remove('hidden');
         }
 
