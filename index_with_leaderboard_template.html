@@ -28,7 +28,6 @@
             align-items: center;
             min-height: 100vh;
             padding: 10px;
-            overflow: hidden;
         }
 
         .main-container {
@@ -39,8 +38,6 @@
             border-radius: 20px;
             padding: 20px;
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-            position: relative;
-            z-index: 1;
         }
 
         .title {
@@ -695,24 +692,25 @@
         </div>
     </div>
 
-    <script type="module">
+    <script>
         // ===== FIREBASE CONFIGURATION =====
+        // REPLACE THIS WITH YOUR FIREBASE CONFIG
         const firebaseConfig = {
-            apiKey: "AIzaSyAROcpyDtgFbQDdJewba2y6q0GaK6l7aRE",
-            authDomain: "airsoft-b1b4a.firebaseapp.com",
-            projectId: "airsoft-b1b4a",
-            storageBucket: "airsoft-b1b4a.firebasestorage.app",
-            messagingSenderId: "694922659115",
-            appId: "1:694922659115:web:025b5c3c33c77e8567b16e",
-            measurementId: "G-5C07GC0JK0"
+            apiKey: "YOUR_API_KEY_HERE",
+            authDomain: "YOUR_AUTH_DOMAIN_HERE",
+            projectId: "YOUR_PROJECT_ID_HERE",
+            storageBucket: "YOUR_STORAGE_BUCKET_HERE",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID_HERE",
+            appId: "YOUR_APP_ID_HERE"
         };
 
         // Initialize Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        // NOTE: This will be uncommented once you provide the config
+        // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        // import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // const app = initializeApp(firebaseConfig);
+        // const db = getFirestore(app);
 
         // ===== GAME VARIABLES =====
         let score = 0;
@@ -779,7 +777,7 @@
         };
 
         // ===== LEADERBOARD FUNCTIONS =====
-        window.viewLeaderboard = async function() {
+        async function viewLeaderboard() {
             document.getElementById('difficultyMenu').classList.add('hidden');
             document.getElementById('leaderboardScreen').classList.add('show');
             await loadLeaderboard();
@@ -790,49 +788,50 @@
             leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #00ffff;">Loading leaderboard...</td></tr>';
 
             try {
-                const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(10));
-                const querySnapshot = await getDocs(q);
+                // NOTE: This will be implemented once Firebase is configured
+                // const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(10));
+                // const querySnapshot = await getDocs(q);
                 
-                let rank = 1;
-                leaderboardBody.innerHTML = '';
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="rank rank-${rank}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</td>
-                        <td>${data.playerName}</td>
-                        <td>${data.score}</td>
-                    `;
-                    leaderboardBody.appendChild(row);
-                    rank++;
-                });
+                // let rank = 1;
+                // leaderboardBody.innerHTML = '';
+                // querySnapshot.forEach((doc) => {
+                //     const data = doc.data();
+                //     const row = document.createElement('tr');
+                //     row.innerHTML = `
+                //         <td class="rank rank-${rank}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank}</td>
+                //         <td>${data.playerName}</td>
+                //         <td>${data.score}</td>
+                //     `;
+                //     leaderboardBody.appendChild(row);
+                //     rank++;
+                // });
 
-                if (rank === 1) {
-                    leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ffaa00;">No scores yet. Be the first!</td></tr>';
-                }
+                // For now, show a placeholder
+                leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ffaa00;">Firebase not yet configured. Submit your config to enable!</td></tr>';
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
-                leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ff1493;">Error loading leaderboard. Make sure Firestore is enabled in Test Mode!</td></tr>';
+                leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ff1493;">Error loading leaderboard</td></tr>';
             }
         }
 
         async function submitScoreToLeaderboard() {
-            const playerName = prompt('Enter your name for the Global Leaderboard:');
+            const playerName = prompt('Enter your name for the leaderboard:');
             if (!playerName) return;
 
             try {
-                await addDoc(collection(db, 'leaderboard'), {
-                    playerName: playerName,
-                    score: score,
-                    difficulty: currentDifficulty,
-                    timestamp: serverTimestamp()
-                });
+                // NOTE: This will be implemented once Firebase is configured
+                // await addDoc(collection(db, 'leaderboard'), {
+                //     playerName: playerName,
+                //     score: score,
+                //     difficulty: currentDifficulty,
+                //     timestamp: new Date()
+                // });
                 
-                alert('Score submitted to Global Leaderboard! 🌍🏆');
-                window.viewLeaderboard();
+                console.log('Score submitted:', playerName, score);
+                alert('Score submitted to leaderboard!');
             } catch (error) {
                 console.error('Error submitting score:', error);
-                alert('Error submitting score. Make sure Firestore is enabled in Test Mode!');
+                alert('Error submitting score');
             }
         }
 
@@ -1002,7 +1001,7 @@
         }
 
         // ===== GAME MECHANICS =====
-        window.startGame = function(difficulty) {
+        function startGame(difficulty) {
             currentDifficulty = difficulty;
             document.getElementById('difficultyMenu').classList.add('hidden');
             document.getElementById('leaderboardScreen').classList.remove('show');
@@ -1023,7 +1022,7 @@
             confettiCtx = confettiCanvas.getContext('2d');
 
             initAudioContext();
-            window.resetGame();
+            resetGame();
         }
 
         function createBalloon() {
@@ -1154,7 +1153,7 @@
             document.getElementById('gameOverScreen').classList.add('show');
         }
 
-        window.resetGame = function() {
+        function resetGame() {
             const settings = difficultySettings[currentDifficulty];
             score = 0;
             balloonsPopped = 0;
@@ -1195,7 +1194,7 @@
             startTimer();
         }
 
-        window.backToMenu = function() {
+        function backToMenu() {
             clearInterval(spawnInterval);
             clearInterval(timerInterval);
             clearInterval(powerUpInterval);
@@ -1206,11 +1205,10 @@
             document.getElementById('difficultyMenu').classList.remove('hidden');
         }
 
-        window.shareScore = function() {
+        function shareScore() {
             const text = `🎮 I just scored ${score} points on ${currentDifficulty.toUpperCase()} mode in Neon Airsoft Pop! 🎯\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/`;
             navigator.clipboard.writeText(text).then(() => {
                 alert('Score copied to clipboard! Share it with your friends! 📤');
-                submitScoreToLeaderboard();
             });
         }
 
