@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#00ffff">
-    <meta name="description" content="A colorful, stress-relieving arcade game where you pop neon balloons. Features Daily Challenges, Power-Ups, Global Leaderboard and more!">
+    <meta name="description" content="A colorful, stress-relieving arcade game where you pop neon balloons. Features Daily Challenges, Power-Ups, Global Leaderboard, and Google Login!">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Neon Airsoft Pop">
     <link rel="manifest" href="/neon-airsoft-pop/manifest.webmanifest">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230a0e27' width='192' height='192'/><circle cx='96' cy='96' r='80' fill='%2300ffff' opacity='0.8'/><circle cx='96' cy='96' r='70' fill='%23ff1493' opacity='0.6'/><circle cx='96' cy='96' r='50' fill='%2300ffff'/><text x='96' y='110' font-size='60' font-weight='bold' fill='%23ff1493' text-anchor='middle' font-family='Arial'>🎯</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230a0e27' width='180' height='180'/><circle cx='90' cy='90' r='70' fill='%2300ffff' opacity='0.8'/><circle cx='90' cy='90' r='60' fill='%23ff1493' opacity='0.6'/><circle cx='90' cy='90' r='45' fill='%2300ffff'/><text x='90' y='105' font-size='50' font-weight='bold' fill='%23ff1493' text-anchor='middle' font-family='Arial'>🎯</text></svg>">
     <title>Neon Airsoft Pop - Arcade Game</title>
     <style>
         * {
@@ -54,6 +53,53 @@
             text-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
         }
 
+        .user-profile {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+        }
+
+        .user-profile.show {
+            display: block;
+        }
+
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid #ffaa00;
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.5);
+        }
+
+        .user-name {
+            color: #ffaa00;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.2), rgba(255, 20, 147, 0.1));
+            border: 2px solid #ff1493;
+            color: #ff1493;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 20, 147, 0.3);
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.5);
+        }
+
         #difficultyMenu {
             display: flex;
             flex-direction: column;
@@ -62,6 +108,61 @@
 
         #difficultyMenu.hidden {
             display: none;
+        }
+
+        .auth-screen {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .auth-screen.show {
+            display: flex;
+        }
+
+        .auth-title {
+            font-size: 1.8em;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .auth-description {
+            color: #00ffff;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .google-login-btn {
+            padding: 15px 30px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .google-login-btn:hover {
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
         }
 
         .menu-title {
@@ -594,8 +695,32 @@
     <div class="main-container">
         <div class="title">🎯 NEON AIRSOFT POP 🎯</div>
 
+        <!-- Auth Screen (Login) -->
+        <div id="authScreen" class="auth-screen show">
+            <div class="auth-title">Welcome to Neon Airsoft Pop!</div>
+            <div class="auth-description">
+                Sign in with your Google account to save your scores, compete on the global leaderboard, and unlock your personalized gaming experience!
+            </div>
+            <button class="google-login-btn" onclick="loginWithGoogle()">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Sign in with Google
+            </button>
+        </div>
+
+        <!-- User Profile (shown after login) -->
+        <div id="userProfile" class="user-profile">
+            <img id="profilePic" class="profile-pic" src="" alt="Profile">
+            <div class="user-name" id="userName">User</div>
+            <button class="logout-btn" onclick="logout()">🚪 LOGOUT</button>
+        </div>
+
         <!-- Difficulty Menu -->
-        <div id="difficultyMenu">
+        <div id="difficultyMenu" class="hidden">
             <div class="menu-title">🎯 SELECT DIFFICULTY 🎯</div>
             <div class="button-grid">
                 <button class="difficulty-btn easy" onclick="startGame('easy')">🟢 EASY</button>
@@ -709,10 +834,66 @@
 
         // Initialize Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // ===== AUTHENTICATION =====
+        let currentUser = null;
+
+        window.loginWithGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                currentUser = result.user;
+                updateUserProfile();
+                showMenu();
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        }
+
+        window.logout = function() {
+            signOut(auth).then(() => {
+                currentUser = null;
+                document.getElementById('authScreen').classList.add('show');
+                document.getElementById('userProfile').classList.remove('show');
+                document.getElementById('difficultyMenu').classList.add('hidden');
+                document.getElementById('gameContainer').style.display = 'none';
+                document.getElementById('leaderboardScreen').classList.remove('show');
+            }).catch(error => {
+                console.error('Logout error:', error);
+            });
+        }
+
+        function updateUserProfile() {
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.displayName || 'Player';
+                document.getElementById('profilePic').src = currentUser.photoURL || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Ccircle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%2300ffff%22/%3E%3C/svg%3E';
+                document.getElementById('authScreen').classList.remove('show');
+                document.getElementById('userProfile').classList.add('show');
+            }
+        }
+
+        function showMenu() {
+            document.getElementById('difficultyMenu').classList.remove('hidden');
+            document.getElementById('gameContainer').style.display = 'none';
+            document.getElementById('gameOverScreen').classList.remove('show');
+            document.getElementById('leaderboardScreen').classList.remove('show');
+        }
+
+        // Check auth state on load
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                updateUserProfile();
+                showMenu();
+            }
+        });
 
         // ===== GAME VARIABLES =====
         let score = 0;
@@ -812,17 +993,21 @@
                 }
             } catch (error) {
                 console.error('Error loading leaderboard:', error);
-                leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ff1493;">Error loading leaderboard. Make sure Firestore is enabled in Test Mode!</td></tr>';
+                leaderboardBody.innerHTML = '<tr><td colspan="3" style="color: #ff1493;">Error loading leaderboard.</td></tr>';
             }
         }
 
         async function submitScoreToLeaderboard() {
-            const playerName = prompt('Enter your name for the Global Leaderboard:');
-            if (!playerName) return;
+            if (!currentUser) {
+                alert('Please log in to submit your score!');
+                return;
+            }
 
             try {
                 await addDoc(collection(db, 'leaderboard'), {
-                    playerName: playerName,
+                    playerName: currentUser.displayName || 'Anonymous',
+                    playerEmail: currentUser.email,
+                    playerPhoto: currentUser.photoURL,
                     score: score,
                     difficulty: currentDifficulty,
                     timestamp: serverTimestamp()
@@ -832,7 +1017,7 @@
                 window.viewLeaderboard();
             } catch (error) {
                 console.error('Error submitting score:', error);
-                alert('Error submitting score. Make sure Firestore is enabled in Test Mode!');
+                alert('Error submitting score.');
             }
         }
 
@@ -1207,7 +1392,8 @@
         }
 
         window.shareScore = function() {
-            const text = `🎮 I just scored ${score} points on ${currentDifficulty.toUpperCase()} mode in Neon Airsoft Pop! 🎯\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/`;
+            const playerName = currentUser ? currentUser.displayName : 'Anonymous';
+            const text = `🎮 I (${playerName}) just scored ${score} points on ${currentDifficulty.toUpperCase()} mode in Neon Airsoft Pop! 🎯\n\nCan you beat my score? Play now: https://muhammad-web999.github.io/neon-airsoft-pop/`;
             navigator.clipboard.writeText(text).then(() => {
                 alert('Score copied to clipboard! Share it with your friends! 📤');
                 submitScoreToLeaderboard();
