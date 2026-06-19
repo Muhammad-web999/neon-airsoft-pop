@@ -853,7 +853,21 @@
                 showMenu();
             } catch (error) {
                 console.error('Login error:', error);
-                alert('Login failed. Please try again.');
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                let errorMsg = 'Login failed. ';
+                if (error.code === 'auth/operation-not-supported-in-this-environment') {
+                    errorMsg += 'This error usually means the domain is not authorized. Make sure you added "muhammad-web999.github.io" to the Authorized Domains in Firebase Console under Authentication > Settings.';
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMsg += 'The login popup was blocked. Please allow popups for this site.';
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    errorMsg += 'You closed the login popup.';
+                } else {
+                    errorMsg += 'Error: ' + error.message;
+                }
+                
+                alert(errorMsg);
             }
         }
 
